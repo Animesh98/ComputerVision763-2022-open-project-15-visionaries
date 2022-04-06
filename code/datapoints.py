@@ -18,7 +18,11 @@ if args.numGestures != len(actions):
 
 
 # path for data to store
-path = '../data/dataPoints'
+dataPointsPath = '../data/dataPoints'
+
+# path for labels to store
+labelsPath = '../data/labels'
+
 # number of videos per action
 numVideos = 30
 # number of frames per video
@@ -31,6 +35,9 @@ mpDraw = mp.solutions.drawing_utils
 
 # webcam capture object
 cap = cv2.VideoCapture(0)
+
+# list for storing labels per gesture per video, thus final shape is (numGestures*numVideos,1)
+labels = []
 
 # iterating for every gesture
 for actionID,action in enumerate(actions):
@@ -94,9 +101,20 @@ for actionID,action in enumerate(actions):
 
         res = np.array(res)
         vid.append(res)
+
+        # appending the gesture ID to the labels list
+        labels.append(actionID)
+
         print(f'Training for video {video+1} in {action} action')
-# saving the final np array to the disk
-np.save(path,vid)
+
+# converting datapoints and labels list to np-array
+labels = np.array(labels)
+vid = np.array(vid)
+
+# saving the final np arrays to the disk
+np.save(dataPointsPath,vid)
+np.save(labelsPath,labels)
+
 print("Datpoints successfully saved now train the network by running trainNetwork.py file")
 cap.release()
 cv2.destroyAllWindows()
