@@ -39,6 +39,9 @@ cap = cv2.VideoCapture(0)
 # list for storing labels per gesture per video, thus final shape is (numGestures*numVideos,1)
 labels = []
 
+# np array for storing the keypoints for every frame in every video and for each gesture, thus its final shape would be (numGestures*numVideos, numFrames, 63), as there are total of 63 keypoints for every hand (21*3)
+data = []
+
 # iterating for every gesture
 for actionID,action in enumerate(actions):
     
@@ -50,15 +53,16 @@ for actionID,action in enumerate(actions):
 
     trainMsg = f'Training for {action} action'
 
-    # np array for storing the keypoints for every frame in every video and for each gesture, thus its final shape would be (numGestures*numVideos, numFrames, 63), as there are total of 63 keypoints for every hand (21*3)
-    vid = []
-
     # iterating through every video sample
     for video in range(numVideos):
         # np array for storing keypoints for every video, thus its final shape would be (numFrames, 63)
         res = []
         # frame counter
         i=0
+        
+        if video==0:
+            cv2.waitKey(2000)
+        
         # iterating through every frame 
         while i<numFrames:
             success, img = cap.read()
@@ -67,12 +71,14 @@ for actionID,action in enumerate(actions):
             # if hand is found in the frame
             if results.multi_hand_landmarks:
                 for handLms in results.multi_hand_landmarks:
+                    # storing all the 21 landmarks x,y,z values in a flat numpy array
                     lm = np.array([[l.x,l.y,l.z] for l in handLms.landmark]).flatten()
+                    # getting the list back from the landmarks nparraay
+                    lm = lm.tolist()
                 mpDraw.draw_landmarks(img,handLms,mpHands.HAND_CONNECTIONS)
-                res.append(lm)
 
             # if hand is found
-            if len(res)!=0:
+            if results.multi_hand_landmarks and len(lm)==63:
                 cv2.namedWindow('Training',cv2.WINDOW_NORMAL)
                 cv2.resizeWindow('Training',1080,720)
                 showImg = cv2.flip(img,1)
@@ -83,6 +89,7 @@ for actionID,action in enumerate(actions):
                 if k==ord('q'):
                     print('Training Aborted, exiting')
                     exit()
+                res.append(lm)
                 # Goto next frame
                 i = i+1
 
@@ -98,10 +105,8 @@ for actionID,action in enumerate(actions):
                 if k==ord('q'):
                     print('Training Aborted, exiting')
                     exit()
-
-        res = np.array(res)
-        vid.append(res)
-
+        # appending the video extracted features to vid list
+        data.append(res)
         # appending the gesture ID to the labels list
         labels.append(actionID)
 
@@ -109,10 +114,10 @@ for actionID,action in enumerate(actions):
 
 # converting datapoints and labels list to np-array
 labels = np.array(labels)
-vid = np.array(vid)
+data = np.array(data)
 
 # saving the final np arrays to the disk
-np.save(dataPointsPath,vid)
+np.save(dataPointsPath,data)
 np.save(labelsPath,labels)
 
 print("Datpoints successfully saved now train the network by running trainNetwork.py file")
