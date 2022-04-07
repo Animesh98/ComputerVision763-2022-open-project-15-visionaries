@@ -26,7 +26,6 @@ data, labels = loadData('dataPoints', 'labels')
 x_train, x_test, y_train, y_test = preprocessData(data, labels)
 
 model.compile(optimizer='Adam', loss='categorical_crossentropy', metrics=['categorical_accuracy'])
-
-model.fit(x_train, y_train, epochs=2000)
-
+model.fit(x_train, y_train, epochs=800)
 model.summary()
+model.save('../weights/action.h5')
