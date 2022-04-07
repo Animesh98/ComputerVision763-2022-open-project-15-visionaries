@@ -1,4 +1,4 @@
-# Video hand gestures to play game
+# Video hand gestures to play game with hand motion capture
 
 ## Dependencies
 `mediapipe, opencv, python, numpy, tensorflow`
