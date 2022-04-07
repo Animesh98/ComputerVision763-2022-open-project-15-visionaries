@@ -2,7 +2,6 @@ import tensorflow as tf
 import numpy as np
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import LSTM, Dense
-from tensorflow.keras.callbacks import TensorBoard
 from train import preprocessData, loadData
 from sklearn.metrics import multilabel_confusion_matrix, accuracy_score
 
