@@ -3,8 +3,22 @@ import cv2
 import mediapipe as mp
 import numpy as np
 from trainMy import *
-import keyboard
 import argparse
+
+from pynput.keyboard import Key as kk
+from pynput.keyboard import Controller as kc
+from pynput.mouse import Button as mb
+from pynput.mouse import Controller as mc
+import time
+
+mouse = mc()
+keyboard = kc()
+
+def altTab(k=keyboard):
+    k.press(kk.alt)
+    k.press(kk.tab)
+    k.release(kk.alt)
+    k.release(kk.tab)
 
 # number of frames per video
 numFrames = 20
@@ -13,6 +27,10 @@ numFrames = 20
 mpHands = mp.solutions.hands
 Hands = mpHands.Hands(max_num_hands=1)
 mpDraw = mp.solutions.drawing_utils
+
+
+cv2.namedWindow('Get User Input',cv2.WINDOW_NORMAL)
+cv2.resizeWindow('Get User Input',1080,720)
 
 def loadParameters():
     parser = argparse.ArgumentParser()
@@ -63,6 +81,9 @@ def getUserInput():
     # capturing initial frame
     _, oldimg = cap.read()
     oldgray = cv2.cvtColor(oldimg, cv2.COLOR_BGR2GRAY)
+    
+    # print('Get Input')
+    # time.sleep(2)
 
     while i<numFrames:
         success, img = cap.read()
@@ -110,9 +131,10 @@ def getUserInput():
                 if len(lm)==105:
                     userData.append(lm)
 
-            # mpDraw.draw_landmarks(img,handLms,mpHands.HAND_CONNECTIONS)
-            cv2.namedWindow('Get User Input',cv2.WINDOW_NORMAL)
-            cv2.resizeWindow('Get User Input',1080,720)
+            mpDraw.draw_landmarks(img,handLms,mpHands.HAND_CONNECTIONS)
+            
+            # cv2.namedWindow('Get User Input',cv2.WINDOW_NORMAL)
+            # cv2.resizeWindow('Get User Input',1080,720)
             showImg = cv2.flip(img,1)
             cv2.putText(showImg,'Hand detected, make gestures',(0,50),cv2.FONT_HERSHEY_SIMPLEX,0.7,(0,255,0),1)
             cv2.imshow('Get User Input',showImg)
@@ -124,14 +146,16 @@ def getUserInput():
             if k==ord('q'):
                 exit()
         else:
-            cv2.namedWindow('Get User Input',cv2.WINDOW_NORMAL)
-            cv2.resizeWindow('Get User Input',1080,720)
+            # cv2.namedWindow('Get User Input',cv2.WINDOW_NORMAL)
+            # cv2.resizeWindow('Get User Input',1080,720)
             showImg = cv2.flip(img,1)
             cv2.putText(showImg,'No hand detected!',(0,50),cv2.FONT_HERSHEY_SIMPLEX,0.7,(0,0,255),1)
             cv2.imshow('Get User Input',showImg)
             k = cv2.waitKey(1)
             if k==ord('q'):
                 exit()
+    # print('Capture Complete')
+    # time.sleep(1)
     return userData
 
 
@@ -149,7 +173,13 @@ if __name__ == "__main__":
     # prediction = model.predict(userData)
     # print(gestures[prediction[0]])
     # # print(userData.shape)
-    # keys = {'Forward':'w', 'Backward':'s', 'Left':'a', 'Right':'d', 'Jump':'space'}
+    # keys = {'Forward':'w', 'Backward':'s', 'Left':'a', 'Right':'d', 'Jump':'j'}
+
+    # altTab()
+    # time.sleep(2)
+    # mouse.click(mb.left)
     while True:
-    #     keyboard.press_and_release(keys[getPrediction()])
+        # keyboard.press(keys[getPrediction()])
+        # keyboard.release(keys[getPrediction()])
         print(getPrediction())
+    # altTab()
