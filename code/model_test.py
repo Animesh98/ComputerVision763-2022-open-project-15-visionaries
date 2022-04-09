@@ -13,14 +13,6 @@ actions = np.array(['up', 'down', 'left', 'right', 'jump', 'stop'])
 
 
 ###LSTM model#######
-#model = Sequential()
-#model.add(layers.Bidirectional(layers.LSTM(64, return_sequences=True), input_shape=(20, 105)))
-#model.add(layers.Bidirectional(layers.LSTM(128, return_sequences=True, activation='relu')))
-#model.add(layers.Bidirectional(layers.LSTM(64, return_sequences=False, activation='relu')))
-#model.add(layers.Dense(64, activation = 'relu'))
-#model.add(layers.Dense(32, activation = 'relu'))
-#model.add(layers.Dense(32, activation = 'relu'))
-#model.add(layers.Dense(actions.shape[0], activation='softmax'))
 
 model = MyModel()
 model.load_weights('../weights/actionMotion_1') ##load weights##
