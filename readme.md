@@ -18,6 +18,14 @@
         * Command to run : python3 inference.py dataPointsFileName labelsFileName\
         example : `python3 inference.py dataPoinitsMotion labelsMotion`
         
+    * **model_train.py** : File having functions to train a simple *Bidirectional LSTM Model*.
+        * Command to run : python3 model_train.py \
+        example : `python3 model_train.py`
+
+    * **model_test.py** : File having functions to test our Model.
+        * Command to run : python3 model_test.py \
+        example : `python3 model_train.py`
+        
 * **data**
     * **dataPoints.npy** : numpy array file having gestures keypoints data
     * **labels.npy** : numpy array file having gestures label data for dataPoints
