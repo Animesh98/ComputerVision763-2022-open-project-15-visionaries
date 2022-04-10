@@ -20,6 +20,21 @@ Create a new virtual environment and install all the dependencies using the `req
 * **data**
     * **dataPointsMotion.npy** : numpy array file having gestures keypoints data with motion features too
     * **labelsMotion.npy** : numpy array file having gestures label data for dataPointsMotion 
+
+* **gestures**\
+    Folder containing gestures as `.gif` files. User can look at these for reference while controlling the game character.
+
+* **Game**\
+    Folder containing a simple unity based game. User can run the game bu double clicking the `CV.exe` file.\
+    **Note** : This file runs only in windows so use windows based system for evaluation.
+
+* **reflectionEssay.pdf**
+* **Presentation.mp4**
+    Explanatory video about the whole project
+* **Demo.mp4**
+    A demo video for the project in action
 * **readme.md**
 * **requirements.txt**
+
+
     
