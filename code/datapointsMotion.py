@@ -1,3 +1,6 @@
+#############################################################
+#### CODE FOR OBTAINING THE GESTURES TO TRAIN THE MODEL #####
+
 import time
 import cv2
 import mediapipe as mp
@@ -115,7 +118,8 @@ for actionID,action in enumerate(actions):
             # if hand is found
             if results.multi_hand_landmarks and len(lm)==105:
                 cv2.namedWindow('Training',cv2.WINDOW_NORMAL)
-                cv2.resizeWindow('Training',1080,720)
+                # cv2.resizeWindow('Training',1080,720)
+                cv2.resizeWindow('Training',450 ,300)
                 showImg = cv2.flip(img,1)
                 cv2.putText(showImg,trainMsg,(0,20),cv2.FONT_HERSHEY_SIMPLEX,0.7,(255,255,255),1)
                 cv2.putText(showImg,'Hand detected, training',(0,50),cv2.FONT_HERSHEY_SIMPLEX,0.7,(0,255,0),1)
@@ -134,7 +138,8 @@ for actionID,action in enumerate(actions):
             # if hand is not found in the frame, don't change the frame
             else:
                 cv2.namedWindow('Training',cv2.WINDOW_NORMAL)
-                cv2.resizeWindow('Training',1080,720)
+                # cv2.resizeWindow('Training',1080,720)
+                cv2.resizeWindow('Training',450 ,300)
                 showImg = cv2.flip(img,1)
                 cv2.putText(showImg,trainMsg,(0,20),cv2.FONT_HERSHEY_SIMPLEX,0.7,(255,255,255),1)
                 cv2.putText(showImg,'No hand detected! Training stopped',(0,50),cv2.FONT_HERSHEY_SIMPLEX,0.7,(0,0,255),1)

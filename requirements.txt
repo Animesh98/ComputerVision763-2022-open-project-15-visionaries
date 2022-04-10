@@ -99,11 +99,6 @@ six==1.16.0
 sklearn==0.0
 soupsieve==2.3.1
 stack-data==0.2.0
-tensorboard==2.8.0
-tensorboard-data-server==0.6.1
-tensorboard-plugin-wit==1.8.1
-tensorflow==2.8.0
-tensorflow-io-gcs-filesystem==0.24.0
 termcolor==1.1.0
 terminado==0.13.3
 testpath==0.6.0

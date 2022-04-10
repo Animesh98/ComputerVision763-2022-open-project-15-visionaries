@@ -1,44 +1,47 @@
+#############################################################
+####### CODE FOR CONTROLLING THE GAME #######################
+
 from matplotlib import use
 import cv2
 import mediapipe as mp
 import numpy as np
-from trainMy import *
 import argparse
 
-from pynput.keyboard import Key as kk
-from pynput.keyboard import Controller as kc
-from pynput.mouse import Button as mb
-from pynput.mouse import Controller as mc
-import time
+# importing the ML model code
+from trainMy import *
 
-mouse = mc()
-keyboard = kc()
 
-def altTab(k=keyboard):
-    k.press(kk.alt)
-    k.press(kk.tab)
-    k.release(kk.alt)
-    k.release(kk.tab)
+# Library for emulating key-presses
+from pynput.keyboard import Key, Controller
 
-# number of frames per video
-numFrames = 20
+
+# Hyperparameter for detecting motion
+threshold = 8
+
+# Defining some global objects
+keyboard = Controller()
+magArray=np.zeros(10)
+userData = np.zeros((20,105))
+
 
 # Mediapipe hands objects
 mpHands = mp.solutions.hands
 Hands = mpHands.Hands(max_num_hands=1)
 mpDraw = mp.solutions.drawing_utils
 
-
+# Defining the Hand gestures capturing window
 cv2.namedWindow('Get User Input',cv2.WINDOW_NORMAL)
-cv2.resizeWindow('Get User Input',1080,720)
+cv2.resizeWindow('Get User Input',450 ,300)
 
+# Funtion for loading the command line arguments
 def loadParameters():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--data', help='Name of data file', type=str, default='dataPoints')
-    parser.add_argument('--labels', help='Name of labels file', type=str, default='labels')
+    parser.add_argument('--data', help='Name of data file', type=str, default='dataPointsMotion')
+    parser.add_argument('--labels', help='Name of labels file', type=str, default='labelsMotion')
     args = parser.parse_args()
     return args.data, args.labels
 
+# Function for loading the trained DECISION TREE model 
 def getModel():
     dataFile, labelsFile = loadParameters()
     data, labels = loadData(dataFile, labelsFile)
@@ -55,131 +58,95 @@ def getModel():
 
     return dtree_model, data
 
-model, globalData = getModel()
+# Loading the ML model
+model,_ = getModel()
 
-def getAccuracy(model, y_test):
-    dtree_predictions = model.predict(globalData['X_test'])
-    score = accuracy_score(y_test, dtree_predictions)
-    return score
-
+# Function for obtaining the gesture predictions based on user input
 def getPrediction(model=model):
-    gestures = {0:'Forward',1:'Backward', 2:'Left', 3:'Right', 4:'Jump'}
-    userData = np.array(getUserInput()).flatten()
-    userData = userData.reshape((-1,1))
-    userData = userData.T
+    global userData
+    gestures = {0:'Forward',1:'Backward', 2:'Left', 3:'Right'}
+    userData = np.array(userData).flatten()
+    userData = userData.reshape((1,-1))
+    # userData = userData.T
+    # print(userData.shape)
     prediction = model.predict(userData)
-    predictedGesture = gestures[prediction[0]]
-    return predictedGesture
+    return gestures[prediction[0]]
+
+# Function to calculate the optical flow in the camera input and obtaining the user input and returning the magnitude of the motion
+def everyFrame(oldgray,newgray, hand):
+    global userData
+    global magArray
+    h, w= newgray.shape
+    if hand.multi_hand_landmarks:
+        for handLms in results.multi_hand_landmarks:
+            lm = np.array([[l.x,l.y,l.z] for l in handLms.landmark]).flatten()
+            lm = lm.tolist()
+            # storing all the 21 landmarks img coordiantes in a 2D numpy array
+            p0 = np.array([[l.x * w,l.y * h] for l in handLms.landmark]).reshape(-1,1,2)
+            p0 = np.float32(p0)
+            # obtaining the flow
+            p1, st, err = cv2.calcOpticalFlowPyrLK(oldgray, newgray, p0, None)
+            good_new = p1[st==1]
+            good_old = p0[st==1]
+            flow = good_new-good_old
+            mag, ang = cv2.cartToPolar(flow[:,0], flow[:,1],angleInDegrees=True)
+            mag = mag.flatten()
+            ang = ang.flatten()
+            mag = np.float32(mag)
+            ang = np.float32(ang)
+
+            # Getting the amount of motion between the consecutive frames  
+            magArray= np.delete(magArray,0)
+            magArray = np.append(magArray,np.average(mag))
+            
+            lm.extend(mag)
+            lm.extend(ang)
+            if len(lm)==105:
+                userData = np.append(userData,np.array(lm))
+                userData = userData[105:]
+    else: 
+        magArray= np.delete(magArray,0)
+        magArray = np.append(magArray,0)
+        userData = np.append(userData,np.zeros(105))
+        userData = userData[105:]
+    
+    return np.average(magArray)
 
 
-def getUserInput():
-    userData = []
-    i=0
-    # webcam capture object
-    cap = cv2.VideoCapture(0)
-
-    # capturing initial frame
+if __name__ == "__main__":
+    keys = {'Forward':'w', 'Backward':'s', 'Left':'a', 'Right':'d'}
+    keyPressed = False
+    key = 'w'
+    cap = cv2.VideoCapture(0,cv2.CAP_DSHOW) # If you're on windows
+    # cap = cv2.VideoCapture(0) #If you're using linux
     _, oldimg = cap.read()
     oldgray = cv2.cvtColor(oldimg, cv2.COLOR_BGR2GRAY)
-    
-    # print('Get Input')
-    # time.sleep(2)
-
-    while i<numFrames:
+    while True:
         success, img = cap.read()
         imgRGB = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         imggray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         results = Hands.process(imgRGB)
+        showImg = cv2.flip(img,1)
+        x= everyFrame(oldgray,imggray, results)
+        if x>threshold:
+            prediction = getPrediction()
+            print(prediction)
+            newkey = keys[prediction]
+            if key!=newkey:
+                keyboard.release(key)
+                key=newkey
+                keyboard.press(key)
+                keyPressed=True
+        else :
+            print(0)
+            if (keyPressed):
+                keyboard.release(key)
+                keyPressed=False
 
-        # getting height, width of the frame
-        h, w, c = img.shape
-
-        # if hand is found in the frame
-        if results.multi_hand_landmarks:
-            for handLms in results.multi_hand_landmarks:
-                # storing all the 21 landmarks x,y,z values in a flat numpy array
-                lm = np.array([[l.x,l.y,l.z] for l in handLms.landmark]).flatten()
-
-                # storing all the 21 landmarks img coordiantes in a 2D numpy array
-                p0 = np.array([[l.x * w,l.y * h] for l in handLms.landmark]).reshape(-1,1,2)
-                p0 = np.float32(p0)
-
-                # getting the list back from the landmarks nparraay
-                lm = lm.tolist()
-
-                # obtaining the flow
-                p1, st, err = cv2.calcOpticalFlowPyrLK(oldgray, imggray, p0, None)
-
-                good_new = p1[st==1]
-                good_old = p0[st==1]
-                flow = good_new-good_old
-
-                mag, ang = cv2.cartToPolar(flow[:,0], flow[:,1],angleInDegrees=True)
-                mag = mag.flatten()
-                ang = ang.flatten()
-                mag = np.float32(mag)
-                ang = np.float32(ang)
-
-                # adding the flow info to frame features
-                lm.extend(mag)
-                lm.extend(ang)
-
-                # Move to next frame
-                oldgray = imggray
-
-                # appending to userData if 105 features are obtained successfully
-                if len(lm)==105:
-                    userData.append(lm)
-
-            mpDraw.draw_landmarks(img,handLms,mpHands.HAND_CONNECTIONS)
-            
-            # cv2.namedWindow('Get User Input',cv2.WINDOW_NORMAL)
-            # cv2.resizeWindow('Get User Input',1080,720)
-            showImg = cv2.flip(img,1)
-            cv2.putText(showImg,'Hand detected, make gestures',(0,50),cv2.FONT_HERSHEY_SIMPLEX,0.7,(0,255,0),1)
-            cv2.imshow('Get User Input',showImg)
-            
-            if len(lm)==105:
-                i = i+1
-
-            k = cv2.waitKey(1)
-            if k==ord('q'):
-                exit()
-        else:
-            # cv2.namedWindow('Get User Input',cv2.WINDOW_NORMAL)
-            # cv2.resizeWindow('Get User Input',1080,720)
-            showImg = cv2.flip(img,1)
-            cv2.putText(showImg,'No hand detected!',(0,50),cv2.FONT_HERSHEY_SIMPLEX,0.7,(0,0,255),1)
-            cv2.imshow('Get User Input',showImg)
-            k = cv2.waitKey(1)
-            if k==ord('q'):
-                exit()
-    # print('Capture Complete')
-    # time.sleep(1)
-    return userData
-
-
-if __name__ == "__main__":
-    # gestures = {0:'Forward',1:'Backward', 2:'Left', 3:'Right', 4:'Jump'}
-    # model, data = getModel()
-    # dtree_predictions = model.predict(data['X_test'])
-    # print(dtree_predictions)
-    # print(data['X_test'].shape)
-    # print(getAccuracy(model, data['y_test']))
-    # userData = np.array(getUserInput()).flatten()
-    # userData = userData.reshape((-1,1))
-    # userData = userData.T
-    # # userData = userData.tolist()
-    # prediction = model.predict(userData)
-    # print(gestures[prediction[0]])
-    # # print(userData.shape)
-    # keys = {'Forward':'w', 'Backward':'s', 'Left':'a', 'Right':'d', 'Jump':'j'}
-
-    # altTab()
-    # time.sleep(2)
-    # mouse.click(mb.left)
-    while True:
-        # keyboard.press(keys[getPrediction()])
-        # keyboard.release(keys[getPrediction()])
-        print(getPrediction())
-    # altTab()
+        cv2.imshow('Get User Input',showImg)
+        oldimg=img
+        oldgray=imggray
+        k = cv2.waitKey(1)
+        if k==ord('q'):
+            break
+    cv2.destroyAllWindows()

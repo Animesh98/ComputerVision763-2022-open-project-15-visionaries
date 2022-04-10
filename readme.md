@@ -1,13 +1,10 @@
 # Video hand gestures to play game with hand motion capture
-
+## Quickstart
+Create a new virtual environment and install all the dependencies using the `requirements.txt` file.
 ## Dependencies
-`mediapipe, opencv, python, numpy, tensorflow`
+`mediapipe, opencv, python, numpy, sklearn`
 ## Project directory structure
 * **code**
-    * **datapoints.py** : For storing gesture datapoints and gesture labels in data directory.
-        * Command to run : python3 datapoints.py numGestures [gesture1, gesture2, ...]\
-        example : `python3 datapoints.py 2 forward backward`\
-        *Note : numGesture and length of gestures list must be same*
     * **datapointsMotion.py** : For storing gesture datapoints and gesture labels in data directory with motion capturing.
         * Command to run : python3 datapointsMotion.py numGestures [gesture1, gesture2, ...]\
         example : `python3 datapointsMotion.py 5 forward backward left right jump`
@@ -18,18 +15,9 @@
         * Command to run : python3 inference.py dataPointsFileName labelsFileName\
         example : `python3 inference.py dataPoinitsMotion labelsMotion`
         
-    * **model_train.py** : File having functions to train a simple *Bidirectional LSTM Model*.
-        * Command to run : python3 model_train.py \
-        example : `python3 model_train.py`
-
-    * **model_test.py** : File having functions to test our Model.
-        * Command to run : python3 model_test.py \
-        example : `python3 model_train.py`
-        
 * **data**
-    * **dataPoints.npy** : numpy array file having gestures keypoints data
-    * **labels.npy** : numpy array file having gestures label data for dataPoints
     * **dataPointsMotion.npy** : numpy array file having gestures keypoints data with motion features too
     * **labelsMotion.npy** : numpy array file having gestures label data for dataPointsMotion 
 * **readme.md**
+* **requirements.txt**
     
