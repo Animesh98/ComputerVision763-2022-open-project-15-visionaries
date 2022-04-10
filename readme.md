@@ -1,4 +1,6 @@
 # Video hand gestures to play game with hand motion capture
+## Please Run the game as explained in the demo, and use Windows to evaluate the project.
+(As unity game will not run on linux as expected)
 ## Quickstart
 Create a new virtual environment and install all the dependencies using the `requirements.txt` file.
 ## Dependencies
